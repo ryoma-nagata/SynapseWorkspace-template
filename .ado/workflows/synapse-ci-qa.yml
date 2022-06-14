@@ -1,0 +1,38 @@
+name: synapse-ci-qa-$(rev:r)
+
+trigger: none
+
+pr: none
+
+
+variables:
+  - name: ARTIFACTS_FOLDER
+    value: "./synapse" # Update to '{yourResourceManagerConnectionName}'
+
+stages:
+  - stage: CI
+    displayName: "Synapse artifact CI"
+    pool:
+      vmImage: "ubuntu-latest"
+    jobs:
+      - job: Validation
+        displayName: "Validation Synapse Artifact"
+        continueOnError: false
+
+        steps:
+          # Checkout code
+          - checkout: self
+            name: checkout_repository
+            displayName: Checkout repository
+            submodules: true
+            lfs: false
+            clean: true
+            continueOnError: false
+            enabled: true
+          - task: Synapse workspace deployment@2
+            inputs:
+              TargetWorkspaceName: 'dev'
+              ArtifactsFolder: $(ARTIFACTS_FOLDER)
+              operation: 'validate'
+
+

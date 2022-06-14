@@ -1,0 +1,41 @@
+name: synapse-cd-release-$(rev:r)
+
+trigger:
+  # none
+  branches:
+    include:
+      - 'main'
+      - 'master'
+      - 'release*'
+  paths:
+    include:
+      - infra/*
+      - code/*
+
+resources:
+  pipelines:
+  - pipeline: ciartifacts
+    source: synapse-workspace-ci-cd-dev  # ci用のPipeline名に修正する
+
+variables:
+  - name: AZURE_RESOURCE_MANAGER_CONNECTION_NAME
+    value: "azure-devops-service-connection" # Update to '{yourResourceManagerConnectionName}'
+  - name: TARGET_RESOURCE_GROUP_NAME_PROD
+    value: "" # Update to '{yourWORKSPACE_NAME_DEV}'
+  - name: TARGET_WORKSPACE_NAME_PROD
+    value: "" # Update to '{yourRESOURCE_GROUP_NAME}'
+
+stages:
+  - stage: Deploy_prod
+    displayName: "Deploy Synapse to dev"
+    # condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'))
+    jobs:    
+    - template: templates/jobs/synapse-deploy-job.yml
+      parameters:
+        ENVIRONMENT_NAME: 'prod'
+        TARGET_WORKSPACE_NAME: $(TARGET_WORKSPACE_NAME_PROD)
+        TARGET_RESOURCE_GROUP_NAME: $(TARGET_RESOURCE_GROUP_NAME_PROD)
+        PARAMETER_FILEPATH: ciartifacts/synapse_template/TemplateParametersForWorkspace_prod.json
+        DEPLOY_FILEPATH: ciartifacts/synapse_template/TemplateForWorkspace.json
+        IS_RESTART_TRIGGER: true
+        

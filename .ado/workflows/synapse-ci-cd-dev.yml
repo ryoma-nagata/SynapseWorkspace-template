@@ -1,7 +1,4 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+name: synapse-ci-cd-dev-$(rev:r)
 
 trigger:
   # none
@@ -19,13 +16,19 @@ pr:
 variables:
   - name: ARTIFACTS_FOLDER
     value: "./synapse" # Update to '{yourResourceManagerConnectionName}'
+  - name: AZURE_RESOURCE_MANAGER_CONNECTION_NAME
+    value: "azure-devops-service-connection" # Update to '{yourResourceManagerConnectionName}'
+  - name: RESOURCE_GROUP_NAME_DEV
+    value: "" # Update to '{yourRESOURCE_GROUP_NAME}'
+  - name: WORKSPACE_NAME_DEV
+    value: "" # Update to '{yourWORKSPACE_NAME_DEV}'
 
 stages:
-  - stage: PublishArtifact
+  - stage: Build
     displayName: "PublishArtifact "
     jobs:
-      - job: PublishArtifact
-        displayName: "PublishArtifact "
+      - job: Build
+        displayName: "Build Synapse artifact "
         continueOnError: false
         pool:
           vmImage: "ubuntu-latest"
@@ -57,3 +60,17 @@ stages:
             displayName: 'Publish synapse'
             artifact: 'synapse_template'
 
+  - stage: Deploy_dev
+    displayName: "Deploy Synapse to dev"
+    dependsOn: Build
+    # condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'))
+    jobs:    
+    - template: templates/jobs/synapse-deploy-job.yml
+      parameters:
+        ENVIRONMENT_NAME: 'dev'
+        TARGET_WORKSPACE_NAME: $(WORKSPACE_NAME_DEV)
+        TARGET_RESOURCE_GROUP_NAME: $(RESOURCE_GROUP_NAME_DEV)
+        PARAMETER_FILEPATH: synapse_template/TemplateParametersForWorkspace_dev.json
+        DEPLOY_FILEPATH: synapse_template/TemplateForWorkspace.json
+        IS_RESTART_TRIGGER: false
+        
