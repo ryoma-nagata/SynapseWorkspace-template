@@ -8,9 +8,9 @@ trigger:
       - 'master'
       - 'release*'
   paths:
-    include:
-      - infra/*
-      - code/*
+    exclude:
+      - .ado/*
+      - *.md
 
 resources:
   pipelines:
