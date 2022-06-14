@@ -10,7 +10,7 @@ trigger:
   paths:
     exclude:
       - .ado/*
-      - *.md
+      - '*.md'
 
 resources:
   pipelines:
